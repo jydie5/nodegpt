@@ -5,7 +5,6 @@ import type { ChatCompletionMessage } from 'openai/resources/chat/completions';
 
 
 
-
 const openai = new AzureOpenAI({
   // azureEndpoint: process.env.AZURE_OPENAI_ENDPOINT as string,
   // // ... existing code ...
@@ -26,6 +25,7 @@ export async function POST(req: Request) {
 
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
+      //model: "o1-mini",
       messages: [
         {
           role: "system",
