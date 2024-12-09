@@ -43,14 +43,16 @@ export async function POST(req: Request) {
 
     return result.toDataStreamResponse();
     
-  } catch (error: OpenAIError) {
-    console.error('Error:', error);
+  } catch (error) {
+    const e = error as OpenAIError;
+    console.error('Error:', e);
     return new Response(
       JSON.stringify({ 
         error: 'Internal server error',
-        details: error.message 
+        details: e.message 
       }),
       { status: 500 }
     );
   }
+  
 }
