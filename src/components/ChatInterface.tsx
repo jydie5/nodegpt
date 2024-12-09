@@ -3,19 +3,24 @@
 import React, { useState, useRef, useEffect, KeyboardEvent } from 'react';
 import { Send } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
-
-interface Message {
-  role: string;
-  content: string;
-}
+import { Message, useChat } from 'ai/react';
 
 const ChatInterface = () => {
-  const [input, setInput] = useState('');
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [isComposing, setIsComposing] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const {
+    messages,
+    input,
+    handleInputChange,
+    handleSubmit,
+    isLoading,
+    setInput
+  } = useChat({
+    api: '/api/chat',
+    initialInput: '',
+  });
 
   const adjustTextareaHeight = () => {
     const textarea = textareaRef.current;
@@ -37,35 +42,7 @@ const ChatInterface = () => {
     scrollToBottom();
   }, [messages]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim()) return;
-
-    setIsLoading(true);
-    setMessages(prev => [...prev, { role: 'user', content: input }]);
-    
-    try {
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: input }),
-      });
-      
-      const data = await response.json();
-      setMessages(prev => [...prev, { role: 'assistant', content: data.message }]);
-    } catch (error) {
-      console.error('Error:', error);
-    } finally {
-      setIsLoading(false);
-      setInput('');
-      if (textareaRef.current) {
-        textareaRef.current.style.height = 'auto';
-      }
-    }
-  };
-
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
-    // IME入力中は処理をスキップ
     if (isComposing) return;
     
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -77,7 +54,7 @@ const ChatInterface = () => {
   return (
     <div className="flex flex-col h-screen">
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.map((message, index) => (
+        {messages.map((message: Message, index) => (
           <div
             key={index}
             className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
@@ -107,7 +84,10 @@ const ChatInterface = () => {
           <textarea
             ref={textareaRef}
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={(e) => {
+              handleInputChange(e);
+              adjustTextareaHeight();
+            }}
             onKeyDown={handleKeyDown}
             onCompositionStart={() => setIsComposing(true)}
             onCompositionEnd={() => setIsComposing(false)}
