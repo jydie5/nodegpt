@@ -1,54 +1,55 @@
 // src/app/api/chat/route.ts
-import { AzureOpenAI } from 'openai'; // 仮のモジュール名
-import { NextResponse } from 'next/server';
-import type { ChatCompletionMessage } from 'openai/resources/chat/completions';
+import { openai } from '@ai-sdk/openai';
+import { streamText } from 'ai';
 
+// Edge環境で実行
+export const runtime = 'edge';
 
-
-const openai = new AzureOpenAI({
-  // azureEndpoint: process.env.AZURE_OPENAI_ENDPOINT as string,
-  // // ... existing code ...
-  apiKey: process.env.AZURE_OPENAI_API_KEY,
-  apiVersion: "2024-07-01-preview"
-});
+// エラー型の定義
+interface OpenAIError extends Error {
+  status?: number;
+  code?: string;
+  type?: string;
+}
 
 export async function POST(req: Request) {
   if (!process.env.AZURE_OPENAI_API_KEY || !process.env.AZURE_OPENAI_ENDPOINT) {
-    return NextResponse.json(
-      { error: 'Azure OpenAI API key or endpoint is not configured' },
+    return new Response(
+      JSON.stringify({ error: 'Azure OpenAI API key or endpoint is not configured' }),
       { status: 500 }
     );
   }
 
   try {
-    const { message } = await req.json();
+    const { messages } = await req.json();
+    
+    if (!messages || !Array.isArray(messages)) {
+      return new Response(
+        JSON.stringify({ error: 'Messages array is required' }),
+        { status: 400 }
+      );
+    }
 
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o",
-      //model: "o1-mini",
+    const result = await streamText({
+      model: openai('gpt-4o'),
       messages: [
         {
           role: "system",
           content: "you are best assistant. you think step by step. output must be Japanese."
         },
-        {
-          role: "user",
-          content: message
-        }
+        ...messages
       ],
-      // max_tokens: 2000,
-      // temperature: 0.7,
     });
 
-    const reply = response.choices[0].message;
-
-    return NextResponse.json({
-      message: reply.content
-    });
-  } catch (error) {
+    return result.toDataStreamResponse();
+    
+  } catch (error: OpenAIError) {
     console.error('Error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
+    return new Response(
+      JSON.stringify({ 
+        error: 'Internal server error',
+        details: error.message 
+      }),
       { status: 500 }
     );
   }
