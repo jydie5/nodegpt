@@ -9,6 +9,10 @@
 - ダークモード対応
 - レスポンシブデザイン
 - Azure OpenAI APIとの統合
+- カスタムフォント（Geist Sans、Geist Mono）の実装
+- 日本語入力対応（IME Composition Events）
+- テキストエリアの自動リサイズ機能
+- エラーハンドリングとタイプセーフな実装
 
 ## アーキテクチャ
 
@@ -75,18 +79,17 @@ flowchart TB
     class External external;
 ```
 
-
-
-
-
 ## 技術スタック
 
 - Next.js 15.0.4
 - React 19.0.0
 - TypeScript
 - Tailwind CSS
+  - @tailwindcss/typography プラグイン
 - Azure OpenAI API
 - react-markdown
+- Lucide React（アイコン）
+- Vercel AI SDK
 
 ## セットアップ手順
 
@@ -121,15 +124,20 @@ npm run dev
 │   ├── app/
 │   │   ├── api/
 │   │   │   └── chat/
-│   │   │       └── route.ts
-│   │   ├── globals.css
-│   │   ├── layout.tsx
-│   │   └── page.tsx
-│   └── components/
-│       ├── ChatWrapper.tsx
-│       └── ChatInterface.tsx
+│   │   │       └── route.ts      # Azure OpenAI APIとの通信処理
+│   │   ├── fonts/                # カスタムフォントファイル
+│   │   │   ├── GeistVF.woff
+│   │   │   └── GeistMonoVF.woff
+│   │   ├── globals.css          # グローバルスタイル定義
+│   │   ├── layout.tsx           # ルートレイアウト（フォント設定含む）
+│   │   └── page.tsx             # メインページ
+│   ├── components/
+│   │   ├── ChatWrapper.tsx      # SSR制御用ラッパー
+│   │   └── ChatInterface.tsx    # メインチャットUI
+│   └── types/
+│       └── chat.ts              # 型定義
 ├── public/
-├── tailwind.config.ts
+├── tailwind.config.ts           # Tailwind設定
 └── package.json
 ```
 
@@ -140,18 +148,45 @@ npm run dev
 - メッセージの送受信処理
 - Markdown表示機能
 - 自動スクロール機能
+- テキストエリアの自動リサイズ
+- IME入力のハンドリング
+- キーボードショートカット（Shift + Enter）
 
 ### ChatWrapper.tsx
 - ChatInterfaceのラッパーコンポーネント
 - クライアントサイドレンダリングの制御
+- dynamic importによるSSR最適化
+
+### route.ts (API)
+- Azure OpenAI APIとの通信
+- エラーハンドリング
+- ストリーミングレスポンスの実装
+- Edge Runtimeでの実行
 
 ## スタイリング
 
 このプロジェクトはTailwind CSSを使用しており、以下の機能を含みます：
 
 - カスタムカラーテーマ
-- ダークモードサポート
+  - CSS変数による動的なテーマ切り替え
+- ダークモードサポート（system preference対応）
 - Typographyプラグイン（Markdown表示用）
+- カスタムフォント
+  - Geist Sans（本文用）
+  - Geist Mono（コードブロック用）
+
+## パフォーマンス最適化
+
+- Edge Runtime使用によるレスポンス時間の短縮
+- ストリーミングレスポンスの実装
+- Dynamic Importによるコード分割
+- 可変フォント（Variable Fonts）の使用
+
+## エラーハンドリング
+
+- API Key/Endpoint未設定時のエラー処理
+- OpenAI API通信時のエラー処理
+- 型安全な実装によるランタイムエラーの防止
 
 ## 開発
 
@@ -196,5 +231,4 @@ MIT
 - Next.js team
 - Vercel
 - Azure OpenAI team
-
-
+- Geist Font team
