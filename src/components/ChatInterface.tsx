@@ -16,7 +16,6 @@ const ChatInterface = () => {
     handleInputChange,
     handleSubmit,
     isLoading,
-    setInput
   } = useChat({
     api: '/api/chat',
     initialInput: '',
