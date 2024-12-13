@@ -211,6 +211,150 @@ npm run build
 npm run start
 ```
 
+
+## Dockerでの単体起動
+
+```bash
+# コンテナ名を調べる
+docker images
+
+# 起動①
+docker run -d -p 3000:3000 --name my-nodegpt-container vsc-nodegpt-82276577176aeab8353efc6ac851d59197f77e231551207af512e3af353e20b6:latest
+
+
+# コンテナにイメージ名をつけて起動しやすくする
+docker tag vsc-nodegpt-82276577176aeab8353efc6ac851d59197f77e231551207af512e3af353e20b6:latest vsc-nodegpt:latest
+# 起動②:その場合次回からコマンドが短縮になります
+docker run -d -p 3000:3000 --name my-nodegpt-container vsc-nodegpt:latest
+
+# 動作を確認するには
+docker logs my-nodegpt-container
+
+# コンテナの停止方法
+#　まず起動中のコンテナの確認
+docker ps
+# すると以下のような画面が出るのでCONTAINER IDもしくはNAMESをメモする
+CONTAINER ID   IMAGE                  COMMAND                  CREATED          STATUS          PORTS                    NAMES
+c27a1d8f910d   vsc-nodegpt:latest     "npm run dev"            3 days ago       Up 2 hours      0.0.0.0:3000->3000/tcp   my-nodegpt-container
+# 停止コマンド（IDもしくはNAMESを指定してstop）
+docker stop my-nodegpt-container
+```
+#########################################################
+
+# docker-compose.yaml,devcontainers.jsonによるオーケストレーションを使用して.envで環境変数を一元管理
+
+### 基本概念:以下の設定を各ファイルに追加する
+docker-compose.ymlでの設定：
+```yaml
+services:
+  app:
+    # ...その他の設定
+    env_file:
+      - .env
+```
+
+devcontainer.jsonでの設定：
+
+```json
+{
+    // ...その他の設定
+    "dockerComposeFile": "docker-compose.yml",
+    "service": "app",
+    // ...その他の設定
+}
+```
+.envファイルを.gitignoreに追加することで、バージョン管理から除外します。
+
+```gitignore
+# .gitignore
+.env
+```
+.envの例
+```env
+# .env
+AZURE_OPENAI_API_KEY=your_azure_openai_api_key
+AZURE_OPENAI_ENDPOINT=https://your-endpoint.azure.com/
+
+OPENAI_API_KEY=your_openai_api_key
+
+MYSQL_HOST=qedx-sql.mysql.database.azure.com
+MYSQL_USER=qedxroot
+MYSQL_PASSWORD=your_password
+MYSQL_DATABASE=qedx_ai
+PORT=3000
+
+```
+# 開発環境と本番環境の分離
+### 開発環境:
+
+現在の docker-compose.yml を使用。
+VSCode の DevContainer を通じて開発環境を構築。
+### 本番環境:
+
+別途本番用の docker-compose.prod.yml を用意。
+デプロイ時に docker-compose -f docker-compose.prod.yml up を使用して本番環境を構築。
+
+### 本番環境用の docker-compose.prod.yml のビルドと起動
+1. 本番環境用イメージのビルド。まず、本番環境用のイメージをビルドします：
+
+```bash
+docker compose -f docker-compose.prod.yml build
+
+# macで上記のコマンドを時効する前にplatformがlinux/amd64になっているかを確認。
+# services:
+#   app:
+#     platform: linux/amd64  # サービスレベルでプラットフォームを指定
+```
+
+2. 本番環境用コンテナの起動:ビルドが完了したら、本番環境用コンテナを起動します：
+
+```bash
+docker compose -f docker-compose.prod.yml up -d
+```
+3. 本番環境用コンテナの確認
+正常に起動しているか確認します：
+
+```bash
+docker compose -f docker-compose.prod.yml ps
+```
+
+# ACR(Azure Container Registory)へのコンテナ登録
+- azureportalでACRのリソースを作ってきます
+- adminアカウントを作ると、ioサーバ名、ユーザー名、パスワードがもらえます
+```bash
+docker login teamsbotdocker.azurecr.io
+#user,passを入力。passのコピペが難しいので注意
+
+# 既存のプロダクトコンテナの確認(IMAGEのところに注目)
+docker compose -f docker-compose.prod.yml ps
+
+
+# 既存イメージをACR用にタグ付けする
+docker tag nodegpt-app teamsbotdocker.azurecr.io/nodegpt-app:latest
+
+
+# タグ付けしたイメージをACRにプッシュする
+docker push teamsbotdocker.azurecr.io/nodegpt-app:latest
+
+# pullもできる
+docker pull myregistry.azurecr.io/hello-world
+
+```
+
+# コンテナからのデプロイ（azure app service）
+
+- とりあえず、githubからのオートデプロイは明日設定。
+- 環境変数はコンテナに入ってないので、app service側で設定すること（vscodeの拡張機能で.envをアップロードするのが楽です）
+- ソースをgithubのコードではなくコンテナと設定する。
+- スタートアップコマンドは必要なかった
+
+
+
+
+
+
+
+
 ## 貢献
 
 1. このリポジトリをフォーク

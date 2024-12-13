@@ -1,0 +1,19 @@
+# docker-compose.prod.yml (本番環境用)
+
+version: '3.8'  # 適切なバージョンを指定
+
+services:
+  app:
+    platform: linux/amd64  # サービスレベルでプラットフォームを指定
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"  # ホストの8080番ポートをコンテナの8080番ポートにマッピング
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=production
+      - PORT=8080
+    restart: unless-stopped
+    # ボリュームのマウントは開発環境のみ必要なため、本番では削除
