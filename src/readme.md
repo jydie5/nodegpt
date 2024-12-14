@@ -348,7 +348,13 @@ docker pull myregistry.azurecr.io/hello-world
 - ソースをgithubのコードではなくコンテナと設定する。
 - スタートアップコマンドは必要なかった
 
-
+# エラー対応
+- devcontainerが急に開けなくなったりしたらエラー不足？
+```bash
+# 未使用のコンテナ、イメージ、ボリューム、ネットワークを削除
+docker system prune -a --volumes
+docker system df
+```
 
 
 
