@@ -12,6 +12,7 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     git \
     curl \
+    ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 # npmの設定を最適化
@@ -41,6 +42,9 @@ RUN if [ -n "$CERT_PATH" ] && [ -f "$CERT_PATH" ]; then \
     cp "$CERT_PATH" /app/certs/DigiCertGlobalRootCA.crt.pem; \
 fi
 
+# # 必要に応じてユーザー権限を設定
+# # 最後に node ユーザーに切り替え
+# USER node
 
 # 開発サーバーのポート
 EXPOSE 3000
