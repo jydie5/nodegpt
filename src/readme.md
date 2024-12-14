@@ -356,6 +356,29 @@ docker system prune -a --volumes
 docker system df
 ```
 
+# git cloneしてからのdev container入るまで
+```bash
+# 環境のめも
+#　node20LTS,(node22LTSはdevcontainer入れなかった)
+# docker最新版
+# WSLをUbuntu22LTSをdockerに連携させた。
+
+#　まず依存関係のインストール
+npm install
+
+# dev環境のrun
+npm run dev
+
+# 本番環境のビルド
+npm run build
+
+# 本番環境のrun
+npm run start
+
+#ここまでやったら一度フォルダを閉じて「コンテナで開く」
+
+
+```
 
 
 
