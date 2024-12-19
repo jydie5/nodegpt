@@ -188,6 +188,22 @@ npm run dev
 - OpenAI API通信時のエラー処理
 - 型安全な実装によるランタイムエラーの防止
 
+
+# データベースの初期設定
+```bash
+npm install mysql2 prisma @prisma/client
+
+# マイグレーション
+npx prisma migrate dev
+
+
+
+
+
+```
+
+
+
 ## 開発
 
 1. 新機能の開発:
